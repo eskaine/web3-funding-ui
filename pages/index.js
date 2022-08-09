@@ -3,14 +3,18 @@ import styles from "../styles/Home.module.css";
 import { useWalletContext } from "../context/WalletProvider";
 
 const Home = () => {
-  const [browserWindow] = useState(null);
-  const { connectWallet } = useWalletContext();
+  const { connectWallet, addFundings, getEthereumObj, setEthereumObj } =
+    useWalletContext();
+  const [funds, addFunds] = useState(0);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      console.log("windows");
-      browserWindow = window;
+    let ethereum = getEthereumObj();
+
+    if (!ethereum && typeof window.ethereum !== "undefined") {
+      ethereum = window.ethereum;
     }
+
+    setEthereumObj(ethereum);
   }, []);
 
   return (
@@ -18,9 +22,16 @@ const Home = () => {
       <button
         id="connectButton"
         className="rounded-full bg-indigo-500 text-white font-bold py-2 px-4"
-        onClick={() => connectWallet(browserWindow)}
+        onClick={() => connectWallet()}
       >
         Connect Metamask
+      </button>
+      <button
+        id="fundButton"
+        className="rounded-full bg-indigo-500 text-white font-bold py-2 px-4"
+        onClick={() => addFundings(funds)}
+      >
+        Add Funds
       </button>
     </div>
   );
