@@ -1,22 +1,38 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { ethers } from "../utils/ethers.min";
+import { ethers } from "../../utils/ethers.min";
+import { abi, contractAddress } from "../helpers/constants";
 
 const WalletContext = createContext();
 
 export const WalletProvider = ({ children }) => {
   const [ethObj, setEthObj] = useState(null);
+  const [account, setAccoount] = useState(null);
 
-  const connectWallet = async () => {
-    walletHandler(() => {
-      ethObj.request({ method: "eth_requestAccounts" });
+  const connectWallet = () => {
+    walletHandler(async () => {
+      const account = await ethObj.request({
+        method: "eth_requestAccounts",
+      });
+
+      if (account.length == 1) {
+        setAccoount(account[0]);
+      }
     });
   };
 
-  const addFundings = (ethAmount) => {
-    walletHandler(() => {
+  const addFundings = (ethAmount = 0) => {
+    walletHandler(async () => {
       const provider = new ethers.providers.Web3Provider(ethObj);
       const signer = provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      try {
+        const txResponse = await contract.fund({
+          value: ethers.utils.parseEthers(ethAmount),
+        });
+      } catch (error) {
+        console.error(error);
+      }
     });
   };
 
@@ -41,6 +57,7 @@ export const WalletProvider = ({ children }) => {
     setEthereumObj,
     getEthereumObj,
     addFundings,
+    account,
   }));
 
   return (
