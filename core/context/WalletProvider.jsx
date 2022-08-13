@@ -36,6 +36,14 @@ export const WalletProvider = ({ children }) => {
     });
   };
 
+  const getBalance = async () => {
+    walletHandler(async () => {
+      const provider = new ethers.providers.Web3Provider(ethObj);
+      const balance = await provider.getBalance(contractAddress);
+      console.log(ethers.utils.formatEther(balance));
+    });
+  };
+
   const walletHandler = (callback) => {
     if (ethObj) {
       callback();
@@ -52,11 +60,23 @@ export const WalletProvider = ({ children }) => {
     return ethObj;
   };
 
+  const txMiningListener = (txResponse, provider) => {
+    console.log(`Mining ${txResponse.hash}...`);
+
+    return new Promise((resolve, reject) => {
+      provider.once(txResponse.hash, (txReceipt) => {
+        console.log(`Completed with ${txReceipt.confirmations} confirmations.`);
+        resolve();
+      });
+    });
+  };
+
   const memoizedState = useMemo(() => ({
     connectWallet,
     setEthereumObj,
     getEthereumObj,
     addFundings,
+    getBalance,
     account,
   }));
 

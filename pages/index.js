@@ -12,6 +12,18 @@ const Home = () => {
   } = useWalletContext();
   const [funds, addFunds] = useState(0);
 
+  const connectWalletClickHandler = () => {
+    connectWallet();
+  };
+
+  const addFundingsClickHandler = () => {
+    addFundings(funds);
+  };
+
+  const fundsOnChangeHandler = (e) => {
+    addFunds(e.target.value);
+  };
+
   useEffect(() => {
     let ethereum = getEthereumObj();
 
@@ -28,7 +40,7 @@ const Home = () => {
         <button
           id="connectButton"
           className="rounded-full bg-indigo-500 text-white font-bold py-2 px-4"
-          onClick={() => connectWallet()}
+          onClick={connectWalletClickHandler}
         >
           Connect Metamask
         </button>
@@ -41,10 +53,12 @@ const Home = () => {
       <button
         id="fundButton"
         className="rounded-full bg-indigo-500 text-white font-bold py-2 px-4"
-        onClick={() => addFundings(funds)}
+        onClick={addFundingsClickHandler}
       >
         Add Funds
       </button>
+      <label for="fund">ETH Amount</label>
+      <input id="ethAmount" placeholder="0.1" onChange={fundsOnChangeHandler} />
     </div>
   );
 };
