@@ -7,7 +7,7 @@ const WalletContext = createContext();
 
 export const WalletProvider = ({ children }) => {
   const [ethObj, setEthObj] = useState(null);
-  const [account, setAccoount] = useState(null);
+  const [account, setAccount] = useState(null);
 
   const connectWallet = () => {
     walletHandler(async () => {
@@ -16,19 +16,16 @@ export const WalletProvider = ({ children }) => {
       });
 
       if (account.length == 1) {
-        setAccoount(account[0]);
+        setAccount(account[0]);
       }
     });
   };
 
-  const addFundings = (ethAmount = 0) => {
-    walletHandler(async () => {
-      const provider = new ethers.providers.Web3Provider(ethObj);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, abi, signer);
+  const addFundings = (ethAmount) => {
+    walletHandler(async (provider, contract) => {
       try {
         const txResponse = await contract.fund({
-          value: ethers.utils.parseEthers(ethAmount),
+          value: ethers.utils.parseEther(ethAmount),
         });
       } catch (error) {
         console.error(error);
@@ -37,16 +34,36 @@ export const WalletProvider = ({ children }) => {
   };
 
   const getBalance = async () => {
-    walletHandler(async () => {
-      const provider = new ethers.providers.Web3Provider(ethObj);
+    walletHandler(async (provider, contract) => {
       const balance = await provider.getBalance(contractAddress);
       console.log(ethers.utils.formatEther(balance));
     });
   };
 
+  const withdrawBalance = async () => {
+    walletHandler(async () => {
+      console.log("Withdrawing...");
+
+      const provider = new ethers.providers.Web3Provider(ethObj);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+
+      try {
+        const txResponse = await contract.withdraw();
+        await txMiningListener(txResponse, provider);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  };
+
   const walletHandler = (callback) => {
     if (ethObj) {
-      callback();
+      const provider = new ethers.providers.Web3Provider(ethObj);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+
+      callback(provider, contract);
     } else {
       console.log("No metamask!");
     }
@@ -77,6 +94,7 @@ export const WalletProvider = ({ children }) => {
     getEthereumObj,
     addFundings,
     getBalance,
+    withdrawBalance,
     account,
   }));
 
